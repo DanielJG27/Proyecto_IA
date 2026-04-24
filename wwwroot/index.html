@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>StudyAI</title>
+  <link rel="stylesheet" href="styless.css">
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>StudyAI</h2>
+    <button onclick="nuevoChat()">+ Nuevo chat</button>
+    <div id="historial"></div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-container">
+    <div id="chat" class="chat"></div>
+
+    <div class="modo-selector">
+        <button class="modo active" onclick="setModo('resumen')">Resumen</button>
+        <button class="modo" onclick="setModo('preguntas')">Preguntas</button>
+        <button class="modo" onclick="setModo('explicar')">Explicar fácil</button>
+        <button class="modo" onclick="setModo('quiz')">Quiz</button>
+    </div>
+
+    <div class="input-area">
+        
+      <textarea id="texto" placeholder="Escribe un mensaje..."></textarea>
+      <button onclick="enviar()">➤</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
