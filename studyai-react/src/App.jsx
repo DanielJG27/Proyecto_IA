@@ -82,17 +82,17 @@ function App() {
 
     } catch (error) {
 
-  console.error(error)
+      console.error(error)
 
-  const errorBot = {
-    tipo: "bot",
-    resumen: "Error al conectar con el servidor",
-    preguntas: []
-  }
+      const errorBot = {
+        tipo: "bot",
+        resumen: "⚠️ Error al conectar con el servidor. Asegúrate de que el backend esté corriendo.",
+        preguntas: []
+      }
 
-  setMensajes(prev => [...prev, errorBot])
+      setMensajes(prev => [...prev, errorBot])
 
-  }finally {
+    } finally {
 
       setCargando(false)
 
@@ -121,26 +121,65 @@ function App() {
       {/* Chat */}
       <div className="chat-container">
 
-        {/* Mensajes */}
-        <ChatBox
-          mensajes={mensajes}
-          cargando={cargando}
-        />
-
-
-        {/* Selector de modo */}
-          <ModeSelector 
-            modoActual={modoActual}
-            cambiarModo={cambiarModo}
-           />
-
-        {/* Input */}
-          <InputArea
-            texto={texto}
-            setTexto={setTexto}
-            enviar={enviar}
-            manejarKeyDown={manejarKeyDown}
+        {/* Welcome screen or Messages */}
+        {mensajes.length === 0 && !cargando ? (
+          <div className="welcome-screen">
+            <div className="welcome-icon">📚</div>
+            <h2>¿Qué quieres aprender hoy?</h2>
+            <p>
+              Pega cualquier texto y StudyAI te ayudará a comprenderlo mejor con
+              resúmenes, preguntas, explicaciones simples o quizzes.
+            </p>
+            <div className="welcome-features">
+              <div className="welcome-feature">
+                <span className="feature-icon">📝</span>
+                <span className="feature-text">Resúmenes claros</span>
+              </div>
+              <div className="welcome-feature">
+                <span className="feature-icon">❓</span>
+                <span className="feature-text">Preguntas de estudio</span>
+              </div>
+              <div className="welcome-feature">
+                <span className="feature-icon">💡</span>
+                <span className="feature-text">Explicaciones fáciles</span>
+              </div>
+              <div className="welcome-feature">
+                <span className="feature-icon">🎯</span>
+                <span className="feature-text">Quizzes interactivos</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <ChatBox
+            mensajes={mensajes}
+            cargando={cargando}
           />
+        )}
+
+        {/* Bottom: Mode + Input */}
+        <div className="bottom-area">
+          <div className="bottom-inner">
+
+            {/* Selector de modo */}
+            <ModeSelector
+              modoActual={modoActual}
+              cambiarModo={cambiarModo}
+            />
+
+            {/* Input */}
+            <InputArea
+              texto={texto}
+              setTexto={setTexto}
+              enviar={enviar}
+              manejarKeyDown={manejarKeyDown}
+            />
+
+            <div className="input-hint">
+              Presiona <strong>Enter</strong> para enviar · <strong>Shift + Enter</strong> para nueva línea
+            </div>
+
+          </div>
+        </div>
 
       </div>
 

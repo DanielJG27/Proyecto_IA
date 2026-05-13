@@ -12,12 +12,13 @@ namespace StudyAI.Controllers
     public class StudyController : ControllerBase
     {
         private readonly HttpClient _httpClient;
-        // Tip: En producción, usa IHttpClientFactory en lugar de instanciar HttpClient manualmente
-        private const string ApiKey = "AIzaSyBJQMqTZifzjpr8Q-yPpSGC-MmFf0-apZU";
+        // La API Key se lee desde appsettings.json / appsettings.Development.json
+        private readonly string _apiKey;
 
-        public StudyController()
+        public StudyController(IConfiguration configuration)
         {
             _httpClient = new HttpClient();
+            _apiKey = configuration["GeminiApiKey"] ?? "";
         }
 
         [HttpPost("resumen")]
@@ -60,16 +61,15 @@ namespace StudyAI.Controllers
             );
 
             // 3. Llamada a la API
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={ApiKey}";
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
             var response = await _httpClient.PostAsync(url, content);
             var result = await response.Content.ReadAsStringAsync();
 
-           if (!response.IsSuccessStatusCode)
-{
-    Console.WriteLine(result);
-
-    return StatusCode((int)response.StatusCode, result);
-}
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(result);
+                return StatusCode((int)response.StatusCode, result);
+            }
 
             // 4. Procesamiento de la respuesta de la IA
             try
@@ -126,16 +126,15 @@ namespace StudyAI.Controllers
                 "application/json"
             );
 
-           var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={ApiKey}";
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
             var response = await _httpClient.PostAsync(url, content);
             var result = await response.Content.ReadAsStringAsync();
 
-           if (!response.IsSuccessStatusCode)
-{
-    Console.WriteLine(result);
-
-    return StatusCode((int)response.StatusCode, result);
-}
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(result);
+                return StatusCode((int)response.StatusCode, result);
+            }
 
             // Para el chat, devolvemos el JSON tal cual o puedes usar la misma lógica de parseo de arriba
             return Ok(result);

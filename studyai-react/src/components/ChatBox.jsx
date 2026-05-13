@@ -1,6 +1,14 @@
 import Message from "./Message"
+import { useRef, useEffect } from "react"
 
 function ChatBox({ mensajes, cargando }) {
+
+  const chatEndRef = useRef(null)
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [mensajes, cargando])
 
   return (
 
@@ -15,9 +23,22 @@ function ChatBox({ mensajes, cargando }) {
 
       {cargando && (
         <div className="message bot loader">
-          Pensando...
+          <div className="bot-header">
+            <div className="bot-avatar">🤖</div>
+            <span className="bot-name">StudyAI</span>
+          </div>
+          <div className="loader-content">
+            <div className="loader-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <span className="loader-text">Analizando tu texto...</span>
+          </div>
         </div>
       )}
+
+      <div ref={chatEndRef} />
 
     </div>
 

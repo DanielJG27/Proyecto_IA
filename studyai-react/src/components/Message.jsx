@@ -6,31 +6,40 @@ function Message({ msg }) {
 
       {msg.tipo === "user" ? (
 
-        msg.contenido
+        <div className="user-bubble">
+          {msg.contenido}
+        </div>
 
       ) : (
 
         <>
+          <div className="bot-header">
+            <div className="bot-avatar">🤖</div>
+            <span className="bot-name">StudyAI</span>
+          </div>
+
           <div className="card resumen">
 
-            <strong>Resumen:</strong>
+            <strong>📝 Respuesta</strong>
             <br />
 
             {msg.resumen}
 
           </div>
 
-          <div className="card preguntas">
+          {msg.preguntas && msg.preguntas.length > 0 && (
+            <div className="card preguntas">
 
-            <strong>Preguntas:</strong>
+              <strong>❓ Preguntas</strong>
 
-            <ul>
-              {msg.preguntas?.map((p, i) => (
-                <li key={i}>{p}</li>
-              ))}
-            </ul>
+              <ul>
+                {msg.preguntas.map((p, i) => (
+                  <li key={i}>{p}</li>
+                ))}
+              </ul>
 
-          </div>
+            </div>
+          )}
         </>
 
       )}
