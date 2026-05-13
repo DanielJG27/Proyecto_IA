@@ -13,7 +13,7 @@ namespace StudyAI.Controllers
     {
         private readonly HttpClient _httpClient;
         // Tip: En producción, usa IHttpClientFactory en lugar de instanciar HttpClient manualmente
-        private const string ApiKey = "AIzaSyBM7pqdHhW-MK1N_Uv0KiU7glV3Uke2m3E";
+        private const string ApiKey = "AIzaSyBJQMqTZifzjpr8Q-yPpSGC-MmFf0-apZU";
 
         public StudyController()
         {
@@ -60,7 +60,7 @@ namespace StudyAI.Controllers
             );
 
             // 3. Llamada a la API
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={ApiKey}";
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={ApiKey}";
             var response = await _httpClient.PostAsync(url, content);
             var result = await response.Content.ReadAsStringAsync();
 
@@ -126,7 +126,7 @@ namespace StudyAI.Controllers
                 "application/json"
             );
 
-           var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={ApiKey}";
+           var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={ApiKey}";
             var response = await _httpClient.PostAsync(url, content);
             var result = await response.Content.ReadAsStringAsync();
 
