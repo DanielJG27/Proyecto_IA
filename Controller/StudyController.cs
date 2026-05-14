@@ -1,24 +1,34 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Linq;
+using System.Security.Claims;
 using StudyAI.Models;
 
 namespace StudyAI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // Added authorization!
     public class StudyController : ControllerBase
     {
         private readonly HttpClient _httpClient;
-        // La API Key se lee desde appsettings.json / appsettings.Development.json
         private readonly string _apiKey;
+        private readonly StudyDbContext _context;
 
-        public StudyController(IConfiguration configuration)
+        public StudyController(IConfiguration configuration, StudyDbContext context)
         {
             _httpClient = new HttpClient();
             _apiKey = configuration["GeminiApiKey"] ?? "";
+            _context = context;
+        }
+
+        private int GetUserId()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.Parse(userIdStr ?? "0");
         }
 
         [HttpPost("resumen")]
@@ -28,6 +38,8 @@ namespace StudyAI.Controllers
             {
                 return BadRequest("El texto es requerido");
             }
+
+            var userId = GetUserId();
 
             // 1. Construcción del Prompt según el modo
             string prompt = data.modo switch
@@ -39,7 +51,6 @@ namespace StudyAI.Controllers
                 _           => data.texto
             };
 
-            // 2. Preparación del cuerpo de la petición para Gemini
             var requestBody = new
             {
                 contents = new[]
@@ -60,7 +71,6 @@ namespace StudyAI.Controllers
                 "application/json"
             );
 
-            // 3. Llamada a la API
             var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
             var response = await _httpClient.PostAsync(url, content);
             var result = await response.Content.ReadAsStringAsync();
@@ -71,20 +81,28 @@ namespace StudyAI.Controllers
                 return StatusCode((int)response.StatusCode, result);
             }
 
-            // 4. Procesamiento de la respuesta de la IA
             try
             {
                 using var json = JsonDocument.Parse(result);
                 
-                // Navegamos por el JSON de Gemini para obtener el texto generado
                 var respuestaTextoIA = json.RootElement
                     .GetProperty("candidates")[0]
                     .GetProperty("content")
                     .GetProperty("parts")[0]
                     .GetProperty("text")
-                    .GetString();
+                    .GetString() ?? "";
 
-                // Retornamos un objeto limpio al frontend
+                // SAVE TO HISTORY
+                var chatHistory = new ChatHistory
+                {
+                    UserId = userId,
+                    Mode = data.modo,
+                    Prompt = data.texto, // original input text
+                    Response = respuestaTextoIA
+                };
+                _context.ChatHistories.Add(chatHistory);
+                await _context.SaveChangesAsync();
+
                 return Ok(new
                 {
                     exito = true,
@@ -105,6 +123,8 @@ namespace StudyAI.Controllers
             {
                 return BadRequest("El mensaje es requerido");
             }
+
+            var userId = GetUserId();
 
             var requestBody = new
             {
@@ -136,8 +156,67 @@ namespace StudyAI.Controllers
                 return StatusCode((int)response.StatusCode, result);
             }
 
-            // Para el chat, devolvemos el JSON tal cual o puedes usar la misma lógica de parseo de arriba
+            try
+            {
+                using var json = JsonDocument.Parse(result);
+                var respuestaTextoIA = json.RootElement
+                    .GetProperty("candidates")[0]
+                    .GetProperty("content")
+                    .GetProperty("parts")[0]
+                    .GetProperty("text")
+                    .GetString() ?? "";
+
+                var chatHistory = new ChatHistory
+                {
+                    UserId = userId,
+                    Mode = "chat",
+                    Prompt = data.mensaje,
+                    Response = respuestaTextoIA
+                };
+                _context.ChatHistories.Add(chatHistory);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                // Non fatal error for history saving
+                Console.WriteLine("Error saving history: " + e.Message);
+            }
+
             return Ok(result);
+        }
+
+        [HttpGet("analysis")]
+        public async Task<IActionResult> GetAIAnalysis()
+        {
+            var userId = GetUserId();
+            var habits = _context.StudyHabits.Where(h => h.UserId == userId).OrderByDescending(h => h.StudyDate).Take(10).ToList();
+            var history = _context.ChatHistories.Where(h => h.UserId == userId).OrderByDescending(h => h.CreatedAt).Take(5).ToList();
+
+            if (!habits.Any()) {
+                return Ok(new { analysis = "Aún no tienes suficientes datos de estudio. ¡Registra tus primeras sesiones para que la IA pueda analizar tus hábitos y darte consejos personalizados!" });
+            }
+
+            string habitsContext = string.Join(", ", habits.Select(h => $"{h.DurationMinutes}min de {h.Subject}"));
+            string prompt = $"Eres un asistente de estudio. Analiza brevemente (max 3 oraciones) estos hábitos recientes del estudiante y dale un consejo motivador y personalizado: {habitsContext}";
+
+            var requestBody = new
+            {
+                contents = new[] { new { parts = new[] { new { text = prompt } } } }
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+            var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
+            
+            var response = await _httpClient.PostAsync(url, content);
+            var result = await response.Content.ReadAsStringAsync();
+
+            try {
+                using var json = JsonDocument.Parse(result);
+                var analysisText = json.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
+                return Ok(new { analysis = analysisText });
+            } catch {
+                return Ok(new { analysis = "Sigue estudiando, ¡lo estás haciendo genial! Vuelve más tarde para un análisis detallado." });
+            }
         }
     }
 }
