@@ -48,6 +48,7 @@ namespace StudyAI.Controllers
                 "preguntas" => $"Genera 5 preguntas de estudio sobre este texto:\n{data.texto}",
                 "explicar"  => $"Explica este texto de forma sencilla como si fuera para un niño:\n{data.texto}",
                 "quiz"      => $"Crea un quiz de 3 preguntas con opciones basado en este texto:\n{data.texto}",
+                "flashcards" => $"Genera un conjunto de flashcards (mínimo 5) para estudiar el siguiente texto. Usa estrictamente el formato:\nPregunta 1: [Pregunta]\nRespuesta 1: [Respuesta]\nPregunta 2: [Pregunta]\nRespuesta 2: [Respuesta]\ny así sucesivamente. Texto:\n{data.texto}",
                 _           => data.texto
             };
 

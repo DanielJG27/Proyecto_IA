@@ -11,5 +11,9 @@ namespace StudyAI.Models
         public string Username { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public double StudyHours { get; set; }
+        public int DaysPerWeek { get; set; }
+        public string ConcentrationLevel { get; set; } = string.Empty;
+        public string OtherVariables { get; set; } = string.Empty;
     }
 }

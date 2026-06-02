@@ -11,6 +11,12 @@ const AuthModal = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Initial study habits fields
+  const [studyHours, setStudyHours] = useState('2');
+  const [daysPerWeek, setDaysPerWeek] = useState('5');
+  const [concentrationLevel, setConcentrationLevel] = useState('Medio');
+  const [otherVariables, setOtherVariables] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -19,7 +25,15 @@ const AuthModal = () => {
     const endpoint = isLogin ? 'login' : 'register';
     const payload = isLogin 
       ? { email, password } 
-      : { username, email, password };
+      : { 
+          username, 
+          email, 
+          password,
+          studyHours: parseFloat(studyHours) || 0,
+          daysPerWeek: parseInt(daysPerWeek) || 0,
+          concentrationLevel,
+          otherVariables
+        };
 
     try {
       const response = await fetch(`http://localhost:5220/api/auth/${endpoint}`, {
@@ -50,7 +64,7 @@ const AuthModal = () => {
 
   return (
     <div className="auth-overlay">
-      <div className="auth-modal">
+      <div className="auth-modal" style={{ maxWidth: !isLogin ? '440px' : '400px' }}>
         <h2>{isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}</h2>
         <p className="auth-subtitle">
           {isLogin ? 'Inicia sesión para continuar tus estudios' : 'Únete para hacer seguimiento de tus hábitos'}
@@ -94,6 +108,65 @@ const AuthModal = () => {
             />
           </div>
 
+          {!isLogin && (
+            <>
+              <div className="auth-divider-title">Perfil de Hábitos</div>
+
+              <div className="form-row">
+                <div className="input-group">
+                  <label>Horas de estudio al día</label>
+                  <input 
+                    type="number" 
+                    value={studyHours} 
+                    onChange={(e) => setStudyHours(e.target.value)} 
+                    required 
+                    min="0.5" 
+                    max="24" 
+                    step="0.5"
+                    placeholder="Ej. 2"
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label>Días por semana</label>
+                  <select 
+                    value={daysPerWeek} 
+                    onChange={(e) => setDaysPerWeek(e.target.value)}
+                    required
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7].map(d => (
+                      <option key={d} value={d}>{d} {d === 1 ? 'día' : 'días'}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label>Nivel de concentración</label>
+                <select 
+                  value={concentrationLevel} 
+                  onChange={(e) => setConcentrationLevel(e.target.value)}
+                  required
+                >
+                  <option value="Bajo">Bajo (Fácil distracción)</option>
+                  <option value="Medio">Medio (Enfoque moderado)</option>
+                  <option value="Alto">Alto (Enfoque profundo / Flujo)</option>
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label>Otras variables / Observaciones</label>
+                <textarea 
+                  value={otherVariables} 
+                  onChange={(e) => setOtherVariables(e.target.value)} 
+                  placeholder="Ej. Prefiero estudiar de noche, necesito ruido blanco..."
+                  rows="2"
+                  style={{ resize: 'none' }}
+                />
+              </div>
+            </>
+          )}
+
           <button type="submit" className="auth-btn submit-btn" disabled={loading}>
             {loading ? 'Procesando...' : (isLogin ? 'Iniciar Sesión' : 'Registrarse')}
           </button>
@@ -108,6 +181,6 @@ const AuthModal = () => {
       </div>
     </div>
   );
-};
+}
 
 export default AuthModal;

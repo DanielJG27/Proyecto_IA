@@ -71,6 +71,7 @@ namespace StudyAI.Controllers
                 totalTimeMinutes,
                 currentStreak,
                 recentHabits,
+                allHabits, // full history for calendar
                 timePerSubject
             });
         }

@@ -1,47 +1,65 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import StudyCalendar from './StudyCalendar';
 import '../styles/styles.css';
 
 const Dashboard = () => {
-  const { token, user } = useAuth();
+  const { token, user, logout } = useAuth();
   const [stats, setStats] = useState(null);
   const [analysis, setAnalysis] = useState('Analizando tus hábitos...');
   const [loading, setLoading] = useState(true);
+  const [aiLoading, setAiLoading] = useState(true);
 
   // New habit form state
   const [subject, setSubject] = useState('');
   const [duration, setDuration] = useState('');
 
-  const fetchData = async () => {
+  const fetchStats = async () => {
     try {
-      // Fetch Dashboard Stats
       const statsRes = await fetch('http://localhost:5220/api/habits/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (statsRes.status === 401) {
+        logout();
+        return;
+      }
       if (statsRes.ok) {
         const statsData = await statsRes.json();
         setStats(statsData);
       }
-
-      // Fetch AI Analysis
-      const aiRes = await fetch('http://localhost:5220/api/study/analysis', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (aiRes.ok) {
-        const aiData = await aiRes.json();
-        setAnalysis(aiData.analysis);
-      }
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      setAnalysis("Error al obtener análisis. Verifica la conexión.");
+      console.error("Error fetching stats:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchAIAnalysis = async () => {
+    setAiLoading(true);
+    try {
+      const aiRes = await fetch('http://localhost:5220/api/study/analysis', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (aiRes.status === 401) {
+        logout();
+        return;
+      }
+      if (aiRes.ok) {
+        const aiData = await aiRes.json();
+        setAnalysis(aiData.analysis);
+      }
+    } catch (error) {
+      console.error("Error fetching AI analysis:", error);
+      setAnalysis("Error al obtener análisis. Verifica la conexión.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (token) {
-      fetchData();
+      fetchStats();
+      fetchAIAnalysis();
     }
   }, [token]);
 
@@ -62,7 +80,8 @@ const Dashboard = () => {
       if (res.ok) {
         setSubject('');
         setDuration('');
-        fetchData(); // refresh data
+        fetchStats(); // refresh data
+        fetchAIAnalysis(); // refresh AI analysis
       }
     } catch (error) {
       console.error("Error adding habit", error);
@@ -103,7 +122,14 @@ const Dashboard = () => {
             <span className="sparkles">✨</span>
             <h2>Análisis de IA</h2>
           </div>
-          <p className="ai-text">{analysis}</p>
+          {aiLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="loader-dots"><span></span><span></span><span></span></div>
+              <p className="ai-text" style={{ opacity: 0.6 }}>Analizando tus hábitos recientes...</p>
+            </div>
+          ) : (
+            <p className="ai-text">{analysis}</p>
+          )}
         </div>
 
         <div className="add-habit-panel glass-panel">
@@ -127,6 +153,34 @@ const Dashboard = () => {
             <button type="submit" className="add-btn">Registrar</button>
           </form>
         </div>
+
+        <div className="profile-habits-panel glass-panel mt-4">
+          <h2>Mi Perfil de Estudio 🎯</h2>
+          <div className="profile-habits-list" style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="profile-habit-item" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>⏱️ Horas diarias:</span>
+              <span style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '13px' }}>{user.studyHours || 0} hrs</span>
+            </div>
+            <div className="profile-habit-item" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>📅 Días por semana:</span>
+              <span style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '13px' }}>{user.daysPerWeek || 0} {user.daysPerWeek === 1 ? 'día' : 'días'}</span>
+            </div>
+            <div className="profile-habit-item" style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>🧠 Concentración:</span>
+              <span style={{ fontWeight: 600, color: 'var(--indigo)', fontSize: '13px' }}>{user.concentrationLevel || 'Medio'}</span>
+            </div>
+            <div className="profile-habit-item" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>📝 Otras variables / Notas:</span>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0, lineHeight: '1.4' }}>
+                {user.otherVariables || 'Sin observaciones adicionales'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-calendar glass-panel mt-4">
+        <StudyCalendar recentHabits={stats.allHabits || []} />
       </div>
 
       {stats.recentHabits && stats.recentHabits.length > 0 && (

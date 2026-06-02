@@ -5,10 +5,15 @@ import InputArea from "./components/InputArea"
 import ChatBox from "./components/ChatBox"
 import Dashboard from "./components/Dashboard"
 import AuthModal from "./components/AuthModal"
+import PomodoroTimer from "./components/PomodoroTimer"
+import StudyGoals from "./components/StudyGoals"
+import Flashcards from "./components/Flashcards"
+import Achievements from "./components/Achievements"
 import { useAuth } from "./context/AuthContext"
+import logo from './assets/logo.png'
 
 function App() {
-  const { token } = useAuth();
+  const { token, logout } = useAuth();
   
   // View state
   const [view, setView] = useState('dashboard'); // 'chat' or 'dashboard'
@@ -39,6 +44,16 @@ function App() {
   // Cambiar modo
   function cambiarModo(modo) {
     setModoActual(modo)
+  }
+
+  function seleccionarModoBienvenida(modo) {
+    setModoActual(modo)
+    setTimeout(() => {
+      const textarea = document.querySelector('.input-area textarea')
+      if (textarea) {
+        textarea.focus()
+      }
+    }, 50)
   }
 
   // Nuevo chat
@@ -80,6 +95,17 @@ function App() {
         })
       })
 
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error("Cuota de la API de IA excedida (20 consultas diarias). Por favor, intenta de nuevo en unos minutos o más tarde.");
+        }
+        throw new Error("HTTP error " + res.status);
+      }
+
       const data = await res.json()
 
       // Mensaje bot
@@ -99,7 +125,9 @@ function App() {
 
       const errorBot = {
         tipo: "bot",
-        resumen: "⚠️ Error al conectar con el servidor. Asegúrate de que el backend esté corriendo y tu sesión sea válida.",
+        resumen: error.message.includes("Cuota") 
+          ? `⚠️ ${error.message}`
+          : "⚠️ Error al conectar con el servidor o procesar la solicitud. Asegúrate de que el backend esté corriendo.",
         preguntas: []
       }
 
@@ -125,40 +153,43 @@ function App() {
         chats={chats}
         nuevoChat={nuevoChat}
         setView={setView}
+        activeView={view}
       />
 
       {/* Main Content Area */}
       <div className="main-content">
-        {view === 'dashboard' ? (
-          <Dashboard />
-        ) : (
+        {view === 'dashboard' && <Dashboard />}
+
+        {view === 'chat' && (
           <div className="chat-container">
             {/* Welcome screen or Messages */}
             {mensajes.length === 0 && !cargando ? (
               <div className="welcome-screen">
-                <div className="welcome-icon">📚</div>
+                <div className="welcome-icon">
+                  <img src={logo} alt="Logo" className="welcome-logo-img" />
+                </div>
                 <h2>¿Qué quieres aprender hoy?</h2>
                 <p>
-                  Pega cualquier texto y StudyAI te ayudará a comprenderlo mejor con
+                  Pega cualquier texto y Learnsync AI te ayudará a comprenderlo mejor con
                   resúmenes, preguntas, explicaciones simples o quizzes.
                 </p>
                 <div className="welcome-features">
-                  <div className="welcome-feature">
+                  <button className="welcome-feature" onClick={() => seleccionarModoBienvenida('resumen')}>
                     <span className="feature-icon">📝</span>
                     <span className="feature-text">Resúmenes claros</span>
-                  </div>
-                  <div className="welcome-feature">
+                  </button>
+                  <button className="welcome-feature" onClick={() => seleccionarModoBienvenida('preguntas')}>
                     <span className="feature-icon">❓</span>
                     <span className="feature-text">Preguntas de estudio</span>
-                  </div>
-                  <div className="welcome-feature">
+                  </button>
+                  <button className="welcome-feature" onClick={() => seleccionarModoBienvenida('explicar')}>
                     <span className="feature-icon">💡</span>
                     <span className="feature-text">Explicaciones fáciles</span>
-                  </div>
-                  <div className="welcome-feature">
+                  </button>
+                  <button className="welcome-feature" onClick={() => seleccionarModoBienvenida('quiz')}>
                     <span className="feature-icon">🎯</span>
                     <span className="feature-text">Quizzes interactivos</span>
-                  </div>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -192,6 +223,11 @@ function App() {
             </div>
           </div>
         )}
+
+        {view === 'flashcards' && <Flashcards />}
+        {view === 'pomodoro' && <PomodoroTimer />}
+        {view === 'goals' && <StudyGoals />}
+        {view === 'achievements' && <Achievements />}
       </div>
     </div>
   )

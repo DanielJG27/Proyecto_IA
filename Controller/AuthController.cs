@@ -41,7 +41,11 @@ namespace StudyAI.Controllers
             {
                 Username = request.Username,
                 Email = request.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                StudyHours = request.StudyHours,
+                DaysPerWeek = request.DaysPerWeek,
+                ConcentrationLevel = request.ConcentrationLevel,
+                OtherVariables = request.OtherVariables
             };
 
             _context.Users.Add(user);
@@ -69,7 +73,11 @@ namespace StudyAI.Controllers
                 {
                     user.Id,
                     user.Username,
-                    user.Email
+                    user.Email,
+                    user.StudyHours,
+                    user.DaysPerWeek,
+                    user.ConcentrationLevel,
+                    user.OtherVariables
                 }
             });
         }

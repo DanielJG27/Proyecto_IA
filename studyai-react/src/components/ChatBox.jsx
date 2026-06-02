@@ -25,7 +25,7 @@ function ChatBox({ mensajes, cargando }) {
         <div className="message bot loader">
           <div className="bot-header">
             <div className="bot-avatar">🤖</div>
-            <span className="bot-name">StudyAI</span>
+            <span className="bot-name">Learnsync AI</span>
           </div>
           <div className="loader-content">
             <div className="loader-dots">
