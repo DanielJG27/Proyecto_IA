@@ -1,36 +1,26 @@
 function ModeSelector({ modoActual, cambiarModo }) {
 
+  const modos = [
+    { id: "resumen",   icon: "📝", label: "Resumen" },
+    { id: "preguntas", icon: "❓", label: "Preguntas" },
+    { id: "explicar",  icon: "💡", label: "Explicar fácil" },
+    { id: "quiz",      icon: "🎯", label: "Quiz" },
+  ]
+
   return (
 
     <div className="modo-selector">
 
-      <button
-        className={`modo ${modoActual === "resumen" ? "active" : ""}`}
-        onClick={() => cambiarModo("resumen")}
-      >
-        Resumen
-      </button>
-
-      <button
-        className={`modo ${modoActual === "preguntas" ? "active" : ""}`}
-        onClick={() => cambiarModo("preguntas")}
-      >
-        Preguntas
-      </button>
-
-      <button
-        className={`modo ${modoActual === "explicar" ? "active" : ""}`}
-        onClick={() => cambiarModo("explicar")}
-      >
-        Explicar fácil
-      </button>
-
-      <button
-        className={`modo ${modoActual === "quiz" ? "active" : ""}`}
-        onClick={() => cambiarModo("quiz")}
-      >
-        Quiz
-      </button>
+      {modos.map((modo) => (
+        <button
+          key={modo.id}
+          className={`modo ${modoActual === modo.id ? "active" : ""}`}
+          onClick={() => cambiarModo(modo.id)}
+        >
+          <span className="modo-icon">{modo.icon}</span>
+          {modo.label}
+        </button>
+      ))}
 
     </div>
 

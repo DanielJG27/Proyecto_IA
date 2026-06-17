@@ -1,0 +1,21 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.csproj.user
+
+# Clave secreta - NO subir a GitHub
+appsettings.Development.json
+
+# Node
+studyai-react/node_modules/
+studyai-react/.env
+
+# Database
+*.db
+
+# IDE
+.vs/
+.vscode/
+*.swp
